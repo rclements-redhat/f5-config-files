@@ -1,0 +1,98 @@
+controls:
+  logLevel: info
+  logFilename: /var/log/cloud/bigIpRuntimeInit.log
+pre_onboard_enabled:
+  - name: provision_rest
+    type: inline
+    commands:
+      - /usr/bin/setdb provision.extramb 1000
+      - /usr/bin/setdb restjavad.useextramb true
+runtime_parameters:
+  - name: HOST_NAME
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/meta-data/tags/instance/hostname
+  - name: LICENSE_KEY
+    type: url
+    value: file:///config/cloud/license_key
+  - name: REGION
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: region
+  - name: BIGIP_PASSWORD
+    type: metadata
+    metadataProvider:
+      environment: aws
+      type: uri
+      value: /latest/dynamic/instance-identity/document
+      query: instanceId
+bigip_ready_enabled: []
+extension_packages:
+  install_operations:
+    - extensionType: do
+      extensionVersion: 1.36.0
+      extensionHash: 6f94718afcbf7743b9c260ab341f33987d2d442ab1f5076410ebd557be7d2ff0
+    - extensionType: as3
+      extensionVersion: 3.43.0
+      extensionHash: 6e50f828292c3e9417136693b7fba232ca4c004187ae1499e83e39210b500e7a
+    - extensionType: ts
+      extensionVersion: 1.32.0
+      extensionHash: a6bf242728a5ba1b8b8f26b59897765567db7e0f0267ba9973f822be3ab387b6
+    - extensionType: fast
+      extensionVersion: 1.24.0
+      extensionHash: 7f1c8080b6712915d18caaf3410d8ed21c0454f53bfc8999f294bd958231b47f
+extension_services:
+  service_operations:
+    - extensionType: do
+      type: inline
+      value:
+        schemaVersion: 1.0.0
+        class: Device
+        label: >-
+          Quickstart 1NIC BIG-IP declaration for Declarative Onboarding with BYOL
+          license
+        async: true
+        Common:
+          class: Tenant
+          My_DbVariables:
+            class: DbVariables
+            provision.extramb: 1000
+            restjavad.useextramb: true
+            ui.advisory.enabled: true
+            ui.advisory.color: blue
+            ui.advisory.text: BIG-IP Quickstart
+          My_Provisioning:
+            class: Provision
+            asm: nominal
+            ltm: nominal
+          My_Ntp:
+            class: NTP
+            servers:
+              - 209.115.181.110
+              - 198.50.127.72
+              - 216.232.132.95
+            timezone: UTC
+          My_Dns:
+            class: DNS
+            nameServers:
+              - 1.1.1.1
+              - 8.8.8.8
+          My_License:
+            class: License
+            licenseType: regKey
+            regKey: '{{{LICENSE_KEY}}}'
+          My_System:
+            class: System
+            autoPhonehome: true
+            hostname: '{{{HOST_NAME}}}'
+          admin:
+            class: User
+            password: '{{{BIGIP_PASSWORD}}}'
+            shell: bash
+            userType: regular
+post_onboard_enabled: []
